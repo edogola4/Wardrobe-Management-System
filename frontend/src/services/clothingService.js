@@ -1,5 +1,3 @@
-
-// src/services/clothingService.js
 import api from './api';
 
 export const getClothingItems = async (params = {}) => {
