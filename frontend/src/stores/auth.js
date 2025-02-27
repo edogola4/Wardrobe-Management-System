@@ -1,13 +1,13 @@
+// src/stores/auth.js
 import { defineStore } from 'pinia';
-import api from '../services/api';
-import router from '../router';
+import { register, login, logout, getCurrentUser } from '@/services/authService';
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: JSON.parse(localStorage.getItem('user')) || null,
     token: localStorage.getItem('token') || null,
     loading: false,
-    error: null
+    error: null,
   }),
   
   getters: {
@@ -15,17 +15,17 @@ export const useAuthStore = defineStore('auth', {
   },
   
   actions: {
-    async register(userData) {
+    async registerUser(userData) {
+      this.loading = true;
+      this.error = null;
+      
       try {
-        this.loading = true;
-        this.error = null;
-        const response = await api.post('/register', userData);
-        this.user = response.data.user;
-        this.token = response.data.token;
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-        localStorage.setItem('token', response.data.token);
-        router.push({ name: 'dashboard' });
-        return response;
+        const data = await register(userData);
+        this.user = data.user;
+        this.token = data.token;
+        localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('token', data.token);
+        return data;
       } catch (error) {
         this.error = error.response?.data?.message || 'Registration failed';
         throw error;
@@ -34,17 +34,17 @@ export const useAuthStore = defineStore('auth', {
       }
     },
     
-    async login(credentials) {
+    async loginUser(credentials) {
+      this.loading = true;
+      this.error = null;
+      
       try {
-        this.loading = true;
-        this.error = null;
-        const response = await api.post('/login', credentials);
-        this.user = response.data.user;
-        this.token = response.data.token;
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-        localStorage.setItem('token', response.data.token);
-        router.push({ name: 'dashboard' });
-        return response;
+        const data = await login(credentials);
+        this.user = data.user;
+        this.token = data.token;
+        localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('token', data.token);
+        return data;
       } catch (error) {
         this.error = error.response?.data?.message || 'Login failed';
         throw error;
@@ -53,41 +53,37 @@ export const useAuthStore = defineStore('auth', {
       }
     },
     
-    async logout() {
+    async logoutUser() {
+      this.loading = true;
+      
       try {
-        this.loading = true;
-        if (this.token) {
-          await api.post('/logout');
-        }
-      } catch (error) {
-        console.error('Logout API error:', error);
-      } finally {
+        await logout();
         this.user = null;
         this.token = null;
         localStorage.removeItem('user');
         localStorage.removeItem('token');
-        this.loading = false;
-        router.push({ name: 'login' });
-      }
-    },
-    
-    async fetchUser() {
-      if (!this.token) return;
-      
-      try {
-        this.loading = true;
-        const response = await api.get('/user');
-        this.user = response.data;
-        localStorage.setItem('user', JSON.stringify(response.data));
-        return response;
       } catch (error) {
-        if (error.response?.status === 401) {
-          this.logout();
-        }
-        throw error;
+        console.error('Logout error:', error);
       } finally {
         this.loading = false;
       }
-    }
-  }
+    },
+    
+    async fetchCurrentUser() {
+      if (!this.token) return;
+      
+      this.loading = true;
+      
+      try {
+        const user = await getCurrentUser();
+        this.user = user;
+        localStorage.setItem('user', JSON.stringify(user));
+      } catch (error) {
+        console.error('Error fetching current user:', error);
+      } finally {
+        this.loading = false;
+      }
+    },
+  },
 });
+

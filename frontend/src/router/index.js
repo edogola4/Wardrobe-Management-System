@@ -1,13 +1,16 @@
-import { createRouter, createWebHistory } from 'vue-router';
-import { useAuthStore } from '../stores/auth';
+// src/router/index.js
+import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
-// Views
-import HomeView from '../views/HomeView.vue';
-import LoginView from '../views/LoginView.vue';
-import RegisterView from '../views/RegisterView.vue';
-import DashboardView from '../views/DashboardView.vue';
-import AddClothingView from '../views/AddClothingView.vue';
-import EditClothingView from '../views/EditClothingView.vue';
+// Import views
+import HomeView from '@/views/HomeView.vue'
+import LoginView from '@/views/LoginView.vue'
+import RegisterView from '@/views/RegisterView.vue'
+import DashboardView from '@/views/DashboardView.vue'
+import ClothingItemView from '@/views/ClothingItemView.vue'
+import CreateItemView from '@/views/CreateItemView.vue'
+import EditItemView from '@/views/EditItemView.vue'
+import NotFoundView from '@/views/NotFoundView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -36,33 +39,48 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
-      path: '/clothing/add',
-      name: 'add-clothing',
-      component: AddClothingView,
+      path: '/items/:id',
+      name: 'item-details',
+      component: ClothingItemView,
       meta: { requiresAuth: true }
     },
     {
-      path: '/clothing/edit/:id',
-      name: 'edit-clothing',
-      component: EditClothingView,
+      path: '/items/create',
+      name: 'create-item',
+      component: CreateItemView,
       meta: { requiresAuth: true }
-    }
+    },
+    {
+      path: '/items/:id/edit',
+      name: 'edit-item',
+      component: EditItemView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      component: NotFoundView
+    },
   ]
-});
+})
 
-// Navigation Guard
+// Navigation guards for authentication
 router.beforeEach((to, from, next) => {
-  const authStore = useAuthStore();
-  const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
-  const requiresGuest = to.matched.some(record => record.meta.requiresGuest);
-
-  if (requiresAuth && !authStore.isAuthenticated) {
-    next({ name: 'login' });
-  } else if (requiresGuest && authStore.isAuthenticated) {
-    next({ name: 'dashboard' });
-  } else {
-    next();
+  const authStore = useAuthStore()
+  const isAuthenticated = authStore.isAuthenticated
+  
+  // Route requires authentication
+  if (to.meta.requiresAuth && !isAuthenticated) {
+    next({ name: 'login' })
+  } 
+  // Route requires guest (not authenticated)
+  else if (to.meta.requiresGuest && isAuthenticated) {
+    next({ name: 'dashboard' })
+  } 
+  // No specific requirements or requirements are met
+  else {
+    next()
   }
-});
+})
 
-export default router;
+export default router
