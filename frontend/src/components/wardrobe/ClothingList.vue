@@ -67,7 +67,8 @@
         await store.dispatch('wardrobe/fetchClothingItems');
       };
       
-      const handleDelete = (itemId) => {
+      // eslint-disable-next-line no-unused-vars
+      const handleDelete = (_itemId) => {
         // No need to do anything here as the item is removed from the store
         // We could trigger a notification or update to the parent if needed
       };

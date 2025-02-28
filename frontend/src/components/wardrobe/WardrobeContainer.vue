@@ -75,6 +75,7 @@
         currentEditItem.value = null;
       };
       
+      // eslint-disable-next-line no-unused-vars
       const handleItemSaved = (item) => {
         // Could display a success message or do additional actions
         // For now, we'll just refresh the list
